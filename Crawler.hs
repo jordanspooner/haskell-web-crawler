@@ -18,7 +18,9 @@ main :: IO()
 main = do
   let currentUrl = L.pack websiteUrl
   pages <- crawlWebsite [] [formatUrl currentUrl currentUrl]
-  print pages
+  putStrLn ""
+  putStrLn "Result:"
+  putStr $ showJson pages
 
 crawlWebsite :: [Webpage] -> [Url] -> IO [Webpage]
 crawlWebsite seenPages []
@@ -28,17 +30,22 @@ crawlWebsite seenPages []
 crawlWebsite seenPages urls@(currentUrl : nextUrls) = do
   -- Try to read current page
   maybeCurrentSource <- try $ simpleHttp $ L.unpack currentUrl
-  print ("Crawling " ++ show currentUrl)
   case maybeCurrentSource of
-    -- Page not reachable, continue to next url
-    Left (_ :: HttpException) -> crawlWebsite seenPages nextUrls
-    -- Otherwise read page
-    Right currentSource       -> crawlNext seenPages urls currentSource
+    Left (_ :: HttpException) -> crawlFailure seenPages urls
+    Right currentSource       -> crawlSuccess seenPages urls currentSource
 
-crawlNext :: [Webpage] -> [Url] -> L.ByteString -> IO [Webpage]
+crawlFailure :: [Webpage] -> [Url] -> IO [Webpage]
 -- Pre: at least one url to read
-crawlNext seenPages (currentUrl : nextUrls) currentSource = do
+crawlFailure seenPages (currentUrl : nextUrls) = do
+  -- Page not reachable, continue to next url
+  putStrLn ("WARNING: The page " ++ show currentUrl ++ " could not be reached.")
+  crawlWebsite seenPages nextUrls
+
+crawlSuccess :: [Webpage] -> [Url] -> L.ByteString -> IO [Webpage]
+-- Pre: at least one url to read
+crawlSuccess seenPages (currentUrl : nextUrls) currentSource = do
   -- Find all linked urls on current page
+  putStrLn ("Crawling " ++ show currentUrl)
   let currentPage = crawlWebpage currentUrl currentSource
   -- Mark current page as seen and vist unseen urls from current page
   let nextSeenPages = currentPage : seenPages
