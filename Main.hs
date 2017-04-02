@@ -1,42 +1,42 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Main where
 
 import Data.List
 import Utils.HtmlParser
 import Utils.UrlParser
-import Utils.JsonBuilder
 import Control.Exception
 import Network.HTTP.Conduit
+import Data.Aeson.Encode.Pretty
 import qualified Data.ByteString.Lazy.Char8 as L
 
 websiteUrl :: String
 websiteUrl
-  = "http://mynameislaurence.com/"
+  = "http://www.schuller.it/"
 
 main :: IO()
 main = do
-  let currentUrl = websiteUrl
+  let currentUrl = L.pack websiteUrl
   pages <- crawlWebsite [] [formatUrl currentUrl currentUrl]
   putStrLn ""
   putStrLn "Result:"
-  putStr $ showJson pages
+  L.putStr $ encodePretty pages
 
 crawlWebsite :: [Webpage] -> [Url] -> IO [Webpage]
 crawlWebsite seenPages []
   -- All viewable pages seen, return result
   = return seenPages
-
-crawlWebsite seenPages urls@(currentUrl : nextUrls) = do
+crawlWebsite seenPages urls@(currentUrl : _) = do
   -- Try to read current page
-  maybeCurrentSource <- try $ simpleHttp currentUrl
+  maybeCurrentSource <- try $ simpleHttp $ L.unpack currentUrl
   case maybeCurrentSource of
     Left (_ :: HttpException) -> crawlFailure seenPages urls
     Right currentSource       -> crawlSuccess seenPages urls currentSource
 
 crawlFailure :: [Webpage] -> [Url] -> IO [Webpage]
 -- Pre: at least one url to read
+crawlFailure _ []
+  = error "Pre condition for crawlFailure not met"
 crawlFailure seenPages (currentUrl : nextUrls) = do
   -- Page not reachable, continue to next url
   putStrLn ("WARNING: The page " ++ show currentUrl ++ " could not be reached.")
@@ -44,6 +44,8 @@ crawlFailure seenPages (currentUrl : nextUrls) = do
 
 crawlSuccess :: [Webpage] -> [Url] -> L.ByteString -> IO [Webpage]
 -- Pre: at least one url to read
+crawlSuccess _ [] _
+  = error "Pre condition for crawlSuccess not met"
 crawlSuccess seenPages (currentUrl : nextUrls) currentSource = do
   -- Find all linked urls on current page
   putStrLn ("Crawling " ++ show currentUrl)

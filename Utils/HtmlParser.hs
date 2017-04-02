@@ -3,8 +3,10 @@
 module Utils.HtmlParser where
 
 import Data.Char
-import qualified Data.ByteString.Lazy.Char8 as L
+import Data.Monoid
 import Utils.UrlParser
+import Data.Aeson
+import qualified Data.ByteString.Lazy.Char8 as L
 
 type Url     = L.ByteString
 type Asset   = L.ByteString
@@ -12,6 +14,16 @@ data Webpage = Webpage { url    :: Url
                        , assets :: [Asset]
                        , links  :: [Url]
                        } deriving (Show)
+
+instance ToJSON L.ByteString where
+ toJSON bs
+   = toJSON $ L.unpack bs
+
+instance ToJSON Webpage where
+ toJSON (Webpage pageUrl pageAssets _)
+   = object ["url" .= pageUrl, "assets" .= pageAssets]
+ toEncoding (Webpage pageUrl pageAssets _)
+   = pairs ("url" .= pageUrl <> "assets" .= pageAssets)
 
 --------------------------------------------------------------------------------
 -- PARSING FUNCTIONS
