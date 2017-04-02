@@ -4,7 +4,7 @@ module Main where
 
 import Data.List
 import Utils.HtmlParser
-import Utils.UrlFormatter
+import Utils.UrlParser
 import Utils.JsonBuilder
 import Control.Exception
 import Network.HTTP.Conduit
@@ -12,7 +12,7 @@ import qualified Data.ByteString.Lazy.Char8 as L
 
 websiteUrl :: String
 websiteUrl
-  = "http://www.schuller.it/"
+  = "http://mynameislaurence.com/"
 
 main :: IO()
 main = do

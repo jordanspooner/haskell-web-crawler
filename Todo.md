@@ -1,8 +1,8 @@
 ## HANDLE EDGE CASES
 - *done* redirects
-- *done - but need to check link at beginning* https
+- *done* https
 - *done* different subdomains
-- broken webpages (i.e. those that don't give 200 response) at start
+- *done* broken webpages (i.e. those that don't give 200 response) at start
 - *done* broken webpages found whilst crawling
 - poorly formatted html (capitals, spaces, with/without quotes)
 - poorly formatted links (e.g. with slashes all over the place, www.)
@@ -20,7 +20,7 @@
 ## TODO
 - *done* request webpage
 - *done* parse html, get static content and links in a user-defined data type
-- build json from this data type
+- *done - but need to improve formatting and speed* build json from this data type
 
 ## CLARITY AND TESTING
 - readme and commenting

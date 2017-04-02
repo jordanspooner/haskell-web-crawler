@@ -2,7 +2,7 @@ module Utils.HtmlParser where
 
 import Data.Char
 import qualified Data.ByteString.Lazy.Char8 as L
-import Utils.UrlFormatter
+import Utils.UrlParser
 
 type Url     = L.ByteString
 type Asset   = L.ByteString
