@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Main where
 
@@ -16,7 +17,7 @@ websiteUrl
 
 main :: IO()
 main = do
-  let currentUrl = L.pack websiteUrl
+  let currentUrl = websiteUrl
   pages <- crawlWebsite [] [formatUrl currentUrl currentUrl]
   putStrLn ""
   putStrLn "Result:"
@@ -29,7 +30,7 @@ crawlWebsite seenPages []
 
 crawlWebsite seenPages urls@(currentUrl : nextUrls) = do
   -- Try to read current page
-  maybeCurrentSource <- try $ simpleHttp $ L.unpack currentUrl
+  maybeCurrentSource <- try $ simpleHttp currentUrl
   case maybeCurrentSource of
     Left (_ :: HttpException) -> crawlFailure seenPages urls
     Right currentSource       -> crawlSuccess seenPages urls currentSource

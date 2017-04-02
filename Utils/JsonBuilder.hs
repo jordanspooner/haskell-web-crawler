@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Utils.JsonBuilder where
 
 import Utils.HtmlParser

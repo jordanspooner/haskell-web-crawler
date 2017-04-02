@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Utils.HtmlParser where
 
 import Data.Char
@@ -16,22 +18,23 @@ data Webpage = Webpage { url    :: Url
 -- Parses HTML source to find links to assets and other webpages
 
 crawlWebpage :: Url -> L.ByteString -> Webpage
-crawlWebpage url bs
-  = Webpage url (formatMaybeUrls url assets) (formatMaybeLinkUrls url links)
+crawlWebpage currentUrl bs
+  = Webpage currentUrl (formatMaybeUrls currentUrl pageAssets)
+    (formatMaybeLinkUrls currentUrl pageLinks)
   where
-    (assets, links) = parseHtml bs [] []
+    (pageAssets, pageLinks) = parseHtml bs [] []
 
 parseHtml :: L.ByteString -> [Maybe Asset] -> [Maybe Url]
              -> ([Maybe Asset], [Maybe Url])
-parseHtml bs assets links
+parseHtml bs as ls
   | L.null bs
-    = (assets, links)
+    = (as, ls)
   | L.head bs == '<' && tag `elem` assetTags
-    = parseHtml rest' (maybeUrl : assets) links
+    = parseHtml rest' (maybeUrl : as) ls
   | L.head bs == '<' && tag `elem` linkTags
-    = parseHtml rest' assets (maybeUrl : links)
+    = parseHtml rest' as (maybeUrl : ls)
   | otherwise
-    = parseHtml (L.tail bs) assets links
+    = parseHtml (L.tail bs) as ls
   where
     (tag, rest)       = L.span isAlpha $ L.tail bs
     (maybeUrl, rest') = parseAttributes rest
@@ -66,18 +69,15 @@ parseValue bs
 
 assetTags :: [L.ByteString]
 assetTags
-  = map L.pack
-    ["link", "script", "img", "video", "source", "audio", "object", "embed"]
+  = ["link", "script", "img", "video", "source", "audio", "object", "embed"]
 
 linkTags :: [L.ByteString]
 linkTags
-  = map L.pack
-    ["a", "iframe"]
+  = ["a", "iframe"]
 
 attributeNames :: [L.ByteString]
 attributeNames
-  = map L.pack
-    ["href", "src", "data"]
+  = ["href", "src", "data"]
 
 --------------------------------------------------------------------------------
 -- PARSER HELPER FUNCTIONS
