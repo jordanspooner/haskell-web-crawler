@@ -1,23 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Utils.HtmlParser where
 
-import Data.Char
-import Data.Monoid
-import Utils.UrlParser
+import Data.Char (isAlpha, isSpace)
+import Data.Monoid ((<>))
+import Utils.UrlParser (formatMaybeAssetUrls, formatMaybeLinkedUrls)
 import Data.Aeson
 import qualified Data.ByteString.Lazy.Char8 as L
 
-type Url     = L.ByteString
-type Asset   = L.ByteString
-data Webpage = Webpage { url    :: Url
-                       , assets :: [Asset]
-                       , links  :: [Url]
-                       } deriving (Show)
-
-instance ToJSON L.ByteString where
- toJSON bs
-   = toJSON $ L.unpack bs
+data Webpage   = Webpage { url    :: String
+                         , assets :: [String]
+                         , links  :: [String]
+                         } deriving (Show)
 
 instance ToJSON Webpage where
  toJSON (Webpage pageUrl pageAssets _)
@@ -29,15 +24,15 @@ instance ToJSON Webpage where
 -- PARSING FUNCTIONS
 -- Parses HTML source to find links to assets and other webpages
 
-crawlWebpage :: Url -> L.ByteString -> Webpage
+crawlWebpage :: String -> L.ByteString -> Webpage
 crawlWebpage currentUrl bs
-  = Webpage currentUrl (formatMaybeUrls currentUrl pageAssets)
-    (formatMaybeLinkUrls currentUrl pageLinks)
+  = Webpage currentUrl (formatMaybeAssetUrls pageAssets currentUrl)
+    (formatMaybeLinkedUrls pageLinks currentUrl)
   where
     (pageAssets, pageLinks) = parseHtml bs [] []
 
-parseHtml :: L.ByteString -> [Maybe Asset] -> [Maybe Url]
-             -> ([Maybe Asset], [Maybe Url])
+parseHtml :: L.ByteString -> [Maybe L.ByteString] -> [Maybe L.ByteString]
+             -> ([Maybe L.ByteString], [Maybe L.ByteString])
 parseHtml bs as ls
   | L.null bs
     = (as, ls)

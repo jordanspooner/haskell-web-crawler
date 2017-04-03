@@ -2,77 +2,85 @@
 
 module Utils.UrlParser where
 
-import Data.List
-import Data.Maybe
-import qualified Data.ByteString.Lazy.Char8 as L
+import Data.Maybe (fromJust, mapMaybe, catMaybes)
+import Data.List (nub)
+import Network.URI
+import qualified Data.ByteString.Lazy.Char8 as L (ByteString, unpack)
 
 --------------------------------------------------------------------------------
--- URL CHECKING
--- Functions to check the validity of links
+-- URL FORMATTING FUNCTIONS
+-- Format lists of urls so that they are absolute and do not include duplicates
 
-formatMaybeLinkUrls :: L.ByteString -> [Maybe L.ByteString] -> [L.ByteString]
-formatMaybeLinkUrls url urls
-  = filter (checkLinkUrl url) $ formatMaybeUrls url urls
-
-checkLinkUrl :: L.ByteString -> L.ByteString -> Bool
-checkLinkUrl currentUrl url
-  = getSubdomain currentUrl == getSubdomain url
-
-isValid :: L.ByteString -> Bool
-isValid url
-  = L.take 7 url /= "mailto:"
-    && L.take 11 url /= "javascript:"
-
---------------------------------------------------------------------------------
--- URL FORMATTING
--- Functions to convert URLs into a standard universal format
-
-formatMaybeUrls :: L.ByteString -> [Maybe L.ByteString] -> [L.ByteString]
-formatMaybeUrls url urls
-  = map (formatUrl url) $ nub $ filter isValid $ catMaybes urls
-
-formatUrl :: L.ByteString -> L.ByteString -> L.ByteString
-formatUrl currentUrl url
-  | L.null url
-    = currentUrl
-  -- Absolute links
-  | L.take 7 url == "http://"
-    = url
-  | L.take 8 url == "https://"
-    = L.append "http://" $ L.drop 8 url
-  | L.take 2 url == "//"
-    = L.append "http://" $ L.drop 2 url
-  | L.take 4 url == "www."
-    = L.append "http://" url
-  -- Relative links
-  | L.take 2 url == "./"
-    = formatUrl currentUrl $ L.drop 2 url
-  | L.take 3 url == "../"
-    = formatUrl (getParent currentUrl) $ L.drop 3 url
-  | L.head url == '/'
-    = L.append (getSubdomain currentUrl) url
-  | otherwise
-    = L.append (getParent currentUrl) url
-
---------------------------------------------------------------------------------
--- CURRENT URL HELPER FUNCTIONS
--- Functions to find current subdomain and parent directory
-
-getSubdomain :: L.ByteString -> L.ByteString
--- Pre: url is formatted correctly (i.e. by formatUrl)
--- Post: does *not* include a final '/' character
-getSubdomain url
-  = L.append "http://" $ L.takeWhile (/= '/') $ L.drop 7 url
-
-getParent :: L.ByteString -> L.ByteString
--- Pre: url is formatted correctly (i.e. by formatUrl)
--- Post: *does* include a final '/' character
-getParent url
-  -- Check if we have reached current URL, if so finish
-  | L.null next    = ""
-  -- Check for adjacent '/' characters, to prevent infinite loop
-  | L.null current = L.append "/" (getParent $ L.tail next)
-  -- Otherwise add this directory to return string
-  | otherwise      = L.append current (getParent next)
+formatMaybeAssetUrls :: [Maybe L.ByteString] -> String -> [String]
+-- Pre: thisUrl is a well-formed URI
+formatMaybeAssetUrls maybeUrls thisUrl
+  = nub . mapMaybe (fmap showUrl . (`parseUrl` url)) $ catMaybes maybeUrls
   where
-    (current, next) = L.span (/= '/') url
+    url = fromJust $ parseURIReference' thisUrl
+
+formatMaybeLinkedUrls :: [Maybe L.ByteString] -> String -> [String]
+-- Pre: thisUrl is a well-formed and absolute URI
+formatMaybeLinkedUrls maybeUrls thisUrl
+  = nub . map showUrl . filter (isValidLinkedUrl url)
+    . mapMaybe (`parseUrl` url) $ catMaybes maybeUrls
+  where
+    url = fromJust $ parseURIReference' thisUrl
+
+--------------------------------------------------------------------------------
+
+parseURIReference' :: String -> Maybe URI
+parseURIReference' str
+  | take 4 str == "www." = (fmap fixPath . parseURIReference . ("http://" ++))
+                           str
+  | otherwise            = (fmap fixPath . parseURIReference) str
+
+fixPath :: URI -> URI
+fixPath URI { uriScheme = thisScheme
+            , uriAuthority = thisAuthority
+            , uriPath = thisPath
+            }
+  = if thisPath == ""
+    then URI thisScheme thisAuthority "/" "" ""
+    else URI thisScheme thisAuthority thisPath "" ""
+
+--------------------------------------------------------------------------------
+-- URL HELPER FUNCTIONS
+-- Functions for parsing URLs, checking they are valid, and showing them
+
+parseUrl :: L.ByteString -> URI -> Maybe URI
+-- Post: returned URI is absolute (includes authority)
+parseUrl linkedUrl thisUrl
+  = fmap (\url -> if uriIsRelative url
+                  then url `relativeTo` thisUrl
+                  else url)
+         maybeLinkedUrl
+    where
+      maybeLinkedUrl = parseURIReference' $ L.unpack linkedUrl
+
+isValidLinkedUrl :: URI -> URI -> Bool
+-- Pre: URLs are absolute
+isValidLinkedUrl URI {uriScheme = linkedScheme, uriAuthority = linkedAuth}
+                 URI {uriAuthority = thisAuth}
+  = (linkedScheme == "http:" || linkedScheme == "https:")
+    && linkedAuth == thisAuth
+
+showUrl :: URI -> String
+-- Post: Queries and tags not shown in output string
+showUrl URI { uriScheme = thisScheme
+            , uriAuthority = thisAuthority
+            , uriPath = thisPath
+            }
+  = (thisScheme ++) . ("//" ++) . (uriRegName auth ++) . (uriPort auth ++)
+    $ thisPath
+  where
+    auth = fromJust thisAuthority
+
+equalsUrl :: String -> String -> Bool
+-- Pre: URLs are well-formed and absolute
+equalsUrl url1 url2
+  = auth1 == auth2 && path1 == path2
+  where
+    URI {uriAuthority = auth1, uriPath = path1}
+      = fromJust $ parseURIReference' url1
+    URI {uriAuthority = auth2, uriPath = path2}
+      = fromJust $ parseURIReference' url2
