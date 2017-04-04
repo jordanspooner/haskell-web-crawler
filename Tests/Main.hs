@@ -99,4 +99,7 @@ crawlSubdomainTests
                                            [parseUrl "schuller.it"]
                      assertEqual "2" (map wsort actualWebpageList2)
                                      expectedWebpageList2
+         , "3" ~: do actualWebpageList3 <- sort <$> crawlSubdomain [] []
+                                           [parseUrl "dsaseguheagu.com"]
+                     assertEqual "3" actualWebpageList3 []
          ]
