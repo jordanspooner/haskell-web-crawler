@@ -51,8 +51,9 @@ crawlWebpage currentUrl bs
 parseHtml :: L.ByteString               -- ^ The HTML source to be parsed
              -> [Maybe L.ByteString]    -- ^ The accumulator for asset links
              -> [Maybe L.ByteString]    -- ^ The accumulator for page links
-             -> ([Maybe L.ByteString]   -- ^ Returns tuple containing list of
-                , [Maybe L.ByteString]) --   all Maybe asset links and list of
+             -> ([Maybe L.ByteString]
+                , [Maybe L.ByteString]) -- ^ Returns tuple containing list of
+                                        --   all Maybe asset links and list of
                                         --   all Maybe page links
 parseHtml bs as ls
   | L.null bs
@@ -71,11 +72,12 @@ parseHtml bs as ls
 --   first value which refers to a link, or if no such value exists, Nothing.
 --   Also returns the remainder of the bytestring to be parsed.
 parseAttributes :: L.ByteString           -- ^ The bytestring to be parsed
-                   -> (Maybe L.ByteString -- ^ Returns tuple containing Maybe
-                      , L.ByteString)     --   link value and remainder of
+                   -> (Maybe L.ByteString
+                      , L.ByteString)     -- ^ Returns tuple containing Maybe
+                                          --   link value and remainder of
                                           --   bytestring to be parsed
 parseAttributes bs
-  | L.null bs        = (Nothing, bs)        -- Missing '>' character
+  | L.null bs        = (Nothing, bs) -- Missing '>' character
   | L.head bs == '>' = (Nothing, bs) -- No assets or links found
   | otherwise        = if L.map toLower name `elem` attributeNames
                        then (Just value, rest'')
@@ -89,8 +91,9 @@ parseAttributes bs
 --   whitespace*, returns the name of the attribute and the remainder of the
 --   bytestring to be parsed.
 parseName :: L.ByteString       -- ^ The bytestring to be parsed
-             -> (L.ByteString   -- ^ Returns the name of the first attribute
-                , L.ByteString) --   and remainder of bytestring to be parsed
+             -> (L.ByteString
+                , L.ByteString) -- ^ Returns the name of the first attribute
+                                --   and remainder of bytestring to be parsed
 parseName
   = L.break (\c -> c `elem` ['=', '>'] || isSpace c)
 
@@ -98,8 +101,9 @@ parseName
 --   preceeding whitespace*, returns the attribute value and the remainder of
 --   the bytestring to be parsed.
 parseValue :: L.ByteString     -- ^ The bytestring to be parsed
-              -> (L.ByteString -- ^ Returns the first attribute value and the
-              , L.ByteString)  --   remainder of the bytestring to be parsed
+              -> (L.ByteString
+              , L.ByteString)  -- ^ Returns the first attribute value and the
+                               --   remainder of the bytestring to be parsed
 parseValue bs
   | L.head bs == '\'' = L.break (== '\'') $ L.tail bs
   | L.head bs == '\"' = L.break (== '\"') $ L.tail bs

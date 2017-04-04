@@ -20,3 +20,9 @@ To run the program, you must then issue the command `runghc Main.hs`.
 - The program considers a linked page as anything within a HTML "a" tag. This may include documents, images, etc. in addition to other webpages.
 - When parsing HTML, the program will consider *everything*: this includes commented code and code that is within scripts.
 - If the crawler finds a link (to a page on the current subdomain) that redirects, it will follow this link and crawl the redirected page, including if that page is actually on a different subdomain. Note however that it will not continue to crawl on a different subdomain.
+
+## Testing and Documentation
+
+If you would like to reuse this code, make changes or simply investigate the code more deeply, you might find the following resources useful:
+- A test suite can be run with the command `runghc Tests.hs`.
+- Documentation for all included functions can be found in the `Documentation` directory.

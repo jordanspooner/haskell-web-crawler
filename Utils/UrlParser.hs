@@ -98,8 +98,9 @@ parseUrlRelativeTo linkedUrlBs (Url thisScheme thisAuth thisPath)
 --   If no scheme is found, returns Nothing and the entire URL. If an incorrect
 --   scheme is found (e.g. "mailto:") returns Nothing and an empty string.
 parseScheme :: L.ByteString           -- ^ The URL to be parsed
-               -> (Maybe L.ByteString -- ^ Returns tuple of Maybe scheme and
-                  , L.ByteString)     --   remainder of URL
+               -> (Maybe L.ByteString
+                  , L.ByteString)     -- ^ Returns tuple of Maybe scheme and
+                                      --   remainder of URL
 parseScheme bs
   | maybeScheme' == "http:"  = (Just maybeScheme', rest')
   | maybeScheme' == "https:" = (Just maybeScheme', rest')
@@ -116,8 +117,9 @@ parseScheme bs
 --   If no authority is found, returns Nothing and the entire URL.
 parseAuthority :: L.ByteString           -- ^ The URL (without scheme) to be
                                          --   parsed
-                  -> (Maybe L.ByteString -- ^ Returns tuple of Maybe authority
-                     , L.ByteString)     --   and remainder of the URL
+                  -> (Maybe L.ByteString
+                     , L.ByteString)     -- ^ Returns tuple of Maybe authority
+                                         --   and remainder of the URL
 parseAuthority bs
   | doubleSlash == "//"             = parseAuthority' auth
   | wwwDot == "www." && L.null rest = (Just bs, "")
