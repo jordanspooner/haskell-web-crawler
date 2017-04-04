@@ -2,11 +2,13 @@
 
 module Tests.Main where
 
-import Main
-import Utils.UrlParser
-import Utils.HtmlParser
-import Test.HUnit
-import Data.List (sort)
+import           Data.List        (sort)
+
+import           Test.HUnit
+
+import           Main
+import           Utils.HtmlParser
+import           Utils.UrlParser
 
 --------------------------------------------------------------------------------
 -- URLPARSER Tests

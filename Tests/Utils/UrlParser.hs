@@ -2,10 +2,12 @@
 
 module Tests.Utils.UrlParser where
 
-import Test.HUnit
-import Data.List (sort)
-import Utils.UrlParser
+import           Data.List                  (sort)
+
 import qualified Data.ByteString.Lazy.Char8 as L
+import           Test.HUnit
+
+import           Utils.UrlParser
 
 --------------------------------------------------------------------------------
 -- URLPARSER TESTS

@@ -2,11 +2,13 @@
 
 module Tests.Utils.HtmlParser where
 
-import Data.List (sort)
-import Test.HUnit
-import Utils.HtmlParser
-import Utils.UrlParser
+import           Data.List                  (sort)
+
 import qualified Data.ByteString.Lazy.Char8 as L
+import           Test.HUnit
+
+import           Utils.HtmlParser
+import           Utils.UrlParser
 
 --------------------------------------------------------------------------------
 -- HTMLPARSER TESTS

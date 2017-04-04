@@ -2,16 +2,22 @@
 
 module Main where
 
-import Data.List
-import Utils.HtmlParser
-import Utils.UrlParser
-import Control.Exception
-import Network.HTTP.Conduit (simpleHttp, HttpException)
-import Data.Aeson.Encode.Pretty
+import           Control.Exception          (try)
+import           Data.List                  ((\\))
+
+import           Data.Aeson.Encode.Pretty   (encodePretty)
 import qualified Data.ByteString.Lazy.Char8 as L
+import           Network.HTTP.Conduit       (HttpException, simpleHttp)
+
+import           Utils.HtmlParser
+import           Utils.UrlParser
+
+--------------------------------------------------------------------------------
 
 -- | Given URL as user input, crawls and pretty prints JSON of subdomain
 --   structure.
+--   Output JSON is a list of viewable webpages, each with its URL and a list
+--   of any assets.
 main :: IO()
 main = do
   putStrLn "Please provide a starting URL. \

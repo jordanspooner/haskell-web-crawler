@@ -25,4 +25,4 @@ To run the program, you must then issue the command `runghc Main.hs`.
 
 If you would like to reuse this code, make changes or simply investigate the code more deeply, you might find the following resources useful:
 - A test suite can be run with the command `runghc Tests.hs`.
-- Documentation for all included functions can be found in the `Documentation` directory.
+- Haddock generated documentation for almost all included functions can be found in the `Documentation` directory.

@@ -3,13 +3,15 @@
 
 module Utils.HtmlParser where
 
-import Data.Char (isAlpha, isSpace, toLower)
-import Data.Monoid ((<>))
-import Utils.UrlParser (Url, showUrl, formatMaybeAssetUrls, formatMaybeLinkedUrls)
-import Data.Aeson
-import Data.Text.Encoding (decodeUtf8)
-import qualified Data.ByteString.Char8 as B (concat)
+import           Data.Char                  (isAlpha, isSpace, toLower)
+import           Data.Monoid                ((<>))
+
+import           Data.Aeson
+import qualified Data.ByteString.Char8      as B (concat)
 import qualified Data.ByteString.Lazy.Char8 as L
+import           Data.Text.Encoding         (decodeUtf8)
+
+import           Utils.UrlParser
 
 --------------------------------------------------------------------------------
 -- WEBPAGE DATA TYPE
@@ -25,6 +27,8 @@ instance ToJSON L.ByteString where
   toJSON
     = toJSON . decodeUtf8 . B.concat . L.toChunks
 
+-- | The JSON generated from a Webpage includes its URL and a list of links to
+--   its assets.
 instance ToJSON Webpage where
  toJSON (Webpage pageUrl pageAssets _)
    = object ["url" .= showUrl pageUrl, "assets" .= map showUrl pageAssets]

@@ -1,11 +1,13 @@
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Utils.UrlParser where
 
-import Data.Maybe (isJust, fromJust, fromMaybe, catMaybes)
-import Data.List (nub)
-import Data.Char (toLower)
+import           Data.Char                  (toLower)
+import           Data.List                  (nub)
+import           Data.Maybe                 (catMaybes, fromJust, fromMaybe,
+                                             isJust)
+
 import qualified Data.ByteString.Lazy.Char8 as L
 
 --------------------------------------------------------------------------------
@@ -17,10 +19,13 @@ data Url = Url { scheme    :: L.ByteString -- ^ E.g. "http:"
                , path      :: L.ByteString -- ^ E.g. "/dir/page.html"
                } deriving (Ord)
 
+-- | E.g. Show (Url "http:" "example.com" "/path") returns the String
+--   "http://example.com/path".
 instance Show Url where
   show (Url urlScheme urlAuth urlPath)
     = concatMap L.unpack [urlScheme, "//", urlAuth, urlPath]
 
+-- | Two Urls are considered equal if their authorities and paths are equal.
 instance Eq Url where
   (==) (Url _ auth1 path1) (Url _ auth2 path2)
     = auth1 == auth2 && path1 == path2
