@@ -2,7 +2,7 @@
 - *done* redirects
 - *done* https
 - *done* different subdomains
-- when redirects take you to a new subdomain *rip*
+- *ignore* when redirects take you to a new subdomain
 - *done* broken webpages (i.e. those that don't give 200 response) at start
 - *done* broken webpages found whilst crawling
 - *done* poorly formatted html (capitals, spaces, with/without quotes)
@@ -23,9 +23,12 @@
 - *done* build json from this data type
 
 ## CLARITY AND TESTING
-- readme and commenting
-- tests
+- *done* readme and commenting
+- *done* tests
 
-## FURTHER EXTENSIONS
-- improve haskell style (folds etc.)
-- try also writing in python (should be a lot nicer!)
+## WHY DID I DECIDE TO WRITE THIS IN HASKELL?
+- it would have been much nicer in python!
+
+## KNOWN BUGS AND ISSUEs
+- cannot currently handle URLs with non-ASCII characters
+- will follow redirects to subdomains (but will not continue from there)
