@@ -8,7 +8,7 @@ This is a command line program, that given a URL, returns a JSON which lists all
 
 This program requires GHC and several dependencies, which can be installed using Cabal. I suggest downloading and installing the Haskell Platform (if you don't already have it), which is available on most package installers. E.g. using `apt-get`, you can install the Haskell Platform with the command `sudo apt-get install haskell-platform`.
 
-To install the dependencies, `cd` into the main directory and run the command `sudo cabal install`.
+To install the dependencies, `cd` into the main directory and run the command `sudo cabal install --only-dependencies`.
 
 ## Usage
 
