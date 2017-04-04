@@ -17,5 +17,6 @@ To run the program, you must then issue the command `runghc Main.hs`.
 ## Known Bugs (Features?) and Issues
 
 - The program cannot currently handle non-ASCII characters in URLs.
-- When parsing HTML, the program will consider everything: this includes commented code and code that is within scripts.
-- If the crawler finds a link (to a page on the current subdomain) that redirects, it will follow this link and crawl that page, including if that page is actually on a different subdomain. However, it will not continue to crawl if that page is on a different subdomain.
+- The program considers a linked page as anything within a HTML "a" tag. This may include documents, images, etc. in addition to other webpages.
+- When parsing HTML, the program will consider *everything*: this includes commented code and code that is within scripts.
+- If the crawler finds a link (to a page on the current subdomain) that redirects, it will follow this link and crawl the redirected page, including if that page is actually on a different subdomain. Note however that it will not continue to crawl on a different subdomain.

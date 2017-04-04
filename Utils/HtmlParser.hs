@@ -19,7 +19,7 @@ import qualified Data.ByteString.Lazy.Char8 as L
 data Webpage = Webpage { url    :: Url   -- ^ The URL for the webpage
                        , assets :: [Url] -- ^ The list of URLs of linked assets
                        , links  :: [Url] -- ^ The list of URLs of linked pages
-                       } deriving (Show, Eq)
+                       } deriving (Show, Eq, Ord)
 
 instance ToJSON L.ByteString where
   toJSON
