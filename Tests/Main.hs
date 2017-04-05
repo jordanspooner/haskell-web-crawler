@@ -11,7 +11,7 @@ import           Utils.HtmlParser
 import           Utils.UrlParser
 
 --------------------------------------------------------------------------------
--- URLPARSER Tests
+-- URLPARSER TESTS
 
 mainTests :: IO()
 mainTests = do
@@ -32,7 +32,7 @@ wsort (Webpage u a l)
   = Webpage u (sort a) (sort l)
 
 --------------------------------------------------------------------------------
--- TEST SUBDOMAIN
+-- TEST SUBDOMAINS
 
 expectedWebpageList1 :: [Webpage]
 expectedWebpageList1

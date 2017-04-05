@@ -174,7 +174,7 @@ normalise' :: L.ByteString -> [L.ByteString] -> [L.ByteString]
 normalise' "" accum
   = accum
 normalise' input accum
-  | take2 == "//"           = normalise' (L.drop 1 input) accum
+  | take2 == "//"           = normalise' (L.tail input) accum
   | take3 == "/.."          = normalise' (L.cons '/' drop3) $ drop 1 accum
   | take2 == "/."           = normalise' (L.cons '/' drop2) accum
   | take11 == "/index.html" = normalise' (L.cons '/' drop11) accum

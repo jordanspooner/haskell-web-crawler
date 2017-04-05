@@ -155,6 +155,10 @@ parseNameTests
 
 parseValueTests :: Test
 parseValueTests
-  = test [ "value" ~: parseValue "link rest"
+  = test [ "single"  ~: parseValue "'link' rest"
+             ~?= ("link", "' rest")
+         , "double"  ~: parseValue "\"link\" rest"
+             ~?= ("link", "\" rest")
+         , "noquote" ~: parseValue "link rest"
              ~?= ("link", " rest")
          ]
