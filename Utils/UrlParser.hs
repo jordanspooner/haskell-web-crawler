@@ -3,10 +3,11 @@
 
 module Utils.UrlParser where
 
-import           Data.Char                  (toLower)
+import           Data.Char                  (toLower, ord)
 import           Data.List                  (nub)
 import           Data.Maybe                 (catMaybes, fromJust, fromMaybe,
                                              isJust)
+import           Numeric
 
 import qualified Data.ByteString.Lazy.Char8 as L
 
@@ -16,14 +17,14 @@ import qualified Data.ByteString.Lazy.Char8 as L
 -- | A container for URLs, made up of scheme, authority and path.
 data Url = Url { scheme    :: L.ByteString -- ^ E.g. "http:"
                , authority :: L.ByteString -- ^ E.g. "www.example.com"
-               , path      :: L.ByteString -- ^ E.g. "/dir/page.html"
+               , path      :: L.ByteString -- ^ E.g. "\/dir\/page.html"
                } deriving (Ord)
 
--- | E.g. Show (Url "http:" "example.com" "/path") returns the String
---   "http://example.com/path".
+-- | E.g. Show (Url "http:" "example.com" "\/path") returns the String
+--   "http:\/\/example.com\/path".
 instance Show Url where
   show (Url urlScheme urlAuth urlPath)
-    = concatMap L.unpack [urlScheme, "//", urlAuth, urlPath]
+    = concatMap L.unpack [urlScheme, "//", urlAuth, escape urlPath]
 
 -- | Two Urls are considered equal if their authorities and paths are equal.
 instance Eq Url where
@@ -58,8 +59,8 @@ formatMaybeLinkedUrls maybeUrls thisUrl
 -- URL PARSING FUNCTIONS
 
 -- | Parses a bytestring representation of a URL into a Url object.
---   Scheme is "http:" unless specified as "https:". Returns "http:////" for any
---   other scheme. Will always produce an absolute URL, including authority.
+--   Scheme is "http:" unless specified as "https:". Returns "http:\/\/\/" for
+--   any other scheme. Will always produce an absolute URL, including authority.
 --   Returned scheme and authority are lowercase and path is normalised.
 parseUrl :: L.ByteString -- ^ The bytestring URL to be parsed
             -> Url       -- ^ Returns the parsed Url
@@ -70,8 +71,7 @@ parseUrl bs
   where
     isAbsoluteUrl = isJust a
     (s, rest)     = parseScheme bs
-    (a, rest')    = parseAuthority rest
-    p             = parsePath rest'
+    (a, p)        = parseAuthority rest
 
 -- | Parses a bytestring for a linked URL into a Url object, by considering it
 --   relative to a given current URL.
@@ -79,9 +79,12 @@ parseUrl bs
 --   URL to guess.
 --   The linked URL will be considered relative (and the path added to that of
 --   the current url) iff it:
---   - does not begin with "www."
---   - AND does not have a '/' except for as the first character
---      or does not have a '.' before a '/' except for as the first character
+--
+--   * does not begin with "www."
+--   * AND does not have a \'\/\' except for as the first character
+--      or does not have a \'.\' before a \'\/\' except for as the first
+--      character
+--
 --   Returned scheme and authority are lowercase and path is normalised.
 parseUrlRelativeTo :: L.ByteString -- ^ The linked URL, to be parsed
                       -> Url       -- ^ The current URL (parent)
@@ -91,12 +94,11 @@ parseUrlRelativeTo linkedUrlBs (Url thisScheme thisAuth thisPath)
   = Url (fromMaybe thisScheme linkedScheme)
         (L.map toLower $ fromMaybe thisAuth linkedAuth)
         (normalise $ if isAbsolutePath then linkedPath
-                     else L.append thisPath linkedPath)
+                     else L.append thisPath $ L.cons '/' linkedPath)
   where
-    (linkedScheme, rest) = parseScheme linkedUrlBs
-    (linkedAuth, rest')  = parseAuthority rest
-    linkedPath           = parsePath rest'
-    isAbsolutePath       = L.head linkedPath == '/'
+    (linkedScheme, rest)     = parseScheme linkedUrlBs
+    (linkedAuth, linkedPath) = parseAuthority rest
+    isAbsolutePath           = L.take 1 linkedPath == "/"
 
 -- | Parses a bytestring to retrieve its scheme if it is "http:" or "https:"
 --   and the remainder to be parsed.
@@ -144,59 +146,95 @@ parseAuthority' bs
   where
     (maybeAuth, rest)   = L.break (`elem` endAuthChars) bs
 
--- | Parses a bytestring with scheme and authority removed, to retrieve its
---   path, removing queries and fragments.
-parsePath :: L.ByteString    -- ^ The URL (without scheme and authority) to be
-                             --   be parsed
-             -> L.ByteString -- ^ Returns path without queries and fragments
-parsePath bs
-  | L.null bs        = "/"
-  | firstChar == '?' = "/"
-  | firstChar == '#' = "/"
-  | otherwise        = maybePath
-  where
-    firstChar = L.head bs
-    maybePath = L.takeWhile (`notElem` endPathChars) bs
-
 --------------------------------------------------------------------------------
 -- PARSING HELPER FUNCTIONS
 
--- | Normalises a path by removing dot-segments and references to index.html
---   Path *must be absolute* (begins with '/').
+-- | Normalises a path by removing dot-segments and references to index.html,
+--   adding \'\/\' to the end of directories, and ignoring queries and
+--   fragments.
+--   Path /must be absolute/ (begins with \'\/\') or empty.
 normalise :: L.ByteString    -- ^ Absolute path to be normalised, E.g.
-                             --   "/dir/../index.html"
-             -> L.ByteString -- ^ Returns normalised path, E.g. "/"
+                             --   "\/dir\/..\/index.html"
+             -> L.ByteString -- ^ Returns normalised path, E.g. "\/"
+normalise ""
+  = "/"
 normalise bs
   = foldl (flip L.append) "" $ normalise' bs []
 
 -- | Helper function for normalise
 normalise' :: L.ByteString -> [L.ByteString] -> [L.ByteString]
 normalise' "" accum
-  = accum
+  -- If the link doesn't look like a file, make sure it ends with a '/'
+  | not (null accum) && final /= "/" && not (isFile final)
+                            = L.append (head accum) "/" : tail accum
+  | otherwise               = accum
+  where
+    final = head accum
+
 normalise' input accum
+  -- REMOVE DOT SEGMENTS and INDEX.HTML
   | take2 == "//"           = normalise' (L.tail input) accum
   | take3 == "/.."          = normalise' (L.cons '/' drop3) $ drop 1 accum
-  | take2 == "/."           = normalise' (L.cons '/' drop2) accum
+  -- If it looks like a file, go back a directory
+  | take2 == "/."           = if not (null accum) && isFile (head accum)
+                              then normalise' (L.cons '/' drop2) $ tail accum
+                              else normalise' (L.cons '/' drop2) accum
   | take11 == "/index.html" = normalise' (L.cons '/' drop11) accum
+  -- REMOVE QUERIES and FRAGMENTS
+  | L.take 1 input == "#"   = accum
+  | L.take 1 input == "?"   = accum
+  -- OTHERWISE CONTINUE
   | otherwise               = normalise' rest
                               $ L.cons '/' this : accum
   where
     (take2, drop2)   = L.splitAt 2 input
     (take3, drop3)   = L.splitAt 3 input
     (take11, drop11) = L.splitAt 11 input
-    (this, rest)     = L.break (== '/') $ if L.head input == '/'
-                                          then L.tail input
-                                          else input
+    (this, rest)     = L.break (`elem` endAuthChars) $ if L.head input == '/'
+                                                       then L.tail input
+                                                       else input
 
--- | Characters which end of authority
+-- | Returns whether a path segment 'looks like' it refers to a file.
+--   A path segment looks like it refers to a file if it has a \'.\' character
+--   (might mean there is a file extension).
+--   */This function needs to be updated. May lead to undesirable results./*
+isFile :: L.ByteString -> Bool
+isFile
+  = L.any (== '.')
+
+-- | Characters which signify the end of the authority
 endAuthChars :: String
 endAuthChars
   = "/?#"
 
--- | Characters which signify end of path
-endPathChars :: String
-endPathChars
-  = "?#"
+-- | Any characters not in the unreserved or reserved URL characters list are
+--   percent encoded.
+escape :: L.ByteString -- ^ A bytestring to encode
+       -> L.ByteString --  ^ Returns with any unknown characters percent encoded
+escape
+  = L.foldr (L.append .percentEncode) ""
+
+-- | Any character not in the unreserved or reserved URL characters list is
+--   percent encoded.
+percentEncode :: Char            -- ^ Character to encode
+                 -> L.ByteString -- ^ Returns character, or percentage encoded
+                                 --   character, if that character is not in the
+                                 --   unreserved or reserved character sets
+percentEncode c
+  = if isValidChar c
+    then L.pack [c]
+    else L.pack $ '%' : showHex (ord c) ""
+
+-- | Returns whether a character is in the unreserved or reserved character set
+--   or not.
+isValidChar :: Char    -- ^ Character to check
+               -> Bool -- ^ Returns true if character is in the unreserved or
+                       --   reserved character sets for URLs
+isValidChar c
+  = 'a' <= c && c <= 'z'
+    || '0' <= c && c <= '9'
+    || 'A' <= c && c <= 'Z'
+    || c `elem` ("-_.~!*'();:@&=+$,/?#[]" :: String)
 
 --------------------------------------------------------------------------------
 -- FUNCTIONS to CHECK and SHOW URLS

@@ -91,8 +91,8 @@ parseAttributes bs
     (value, rest') = parseValue $ dropSpace . dropEquals . dropSpace $ rest
     rest''         = dropQuote . dropSpace $ rest'
 
--- | Given a bytestring beginning with an attribute and *with no preceeding
---   whitespace*, returns the name of the attribute and the remainder of the
+-- | Given a bytestring beginning with an attribute and /with no preceeding
+--   whitespace/, returns the name of the attribute and the remainder of the
 --   bytestring to be parsed.
 parseName :: L.ByteString       -- ^ The bytestring to be parsed
              -> (L.ByteString
@@ -101,8 +101,8 @@ parseName :: L.ByteString       -- ^ The bytestring to be parsed
 parseName
   = L.break (\c -> c `elem` ['=', '>'] || isSpace c)
 
--- | Given a bytestring beginning with an attribute value and *with no
---   preceeding whitespace*, returns the attribute value and the remainder of
+-- | Given a bytestring beginning with an attribute value and /with no
+--   preceeding whitespace/, returns the attribute value and the remainder of
 --   the bytestring to be parsed.
 parseValue :: L.ByteString     -- ^ The bytestring to be parsed
               -> (L.ByteString

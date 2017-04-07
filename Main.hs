@@ -16,12 +16,43 @@ import           Utils.UrlParser
 
 -- | Given URL as user input, crawls and pretty prints JSON of subdomain
 --   structure.
+--   Input can be given with or without scheme. If no scheme is provided, http
+--   will be selected by default.
 --   Output JSON is a list of viewable webpages, each with its URL and a list
 --   of any assets.
+--   Example:
+--   
+--   >>> main
+--   Please provide a starting URL:
+--   >>> www.haskell.org
+--   [
+--   {
+--       "url": "http://www.haskell.org/",
+--       "assets": [
+--           "http://www.haskell.org/static/js/tryhaskell.pages.js",
+--           "http://www.haskell.org/static/js/tryhaskell.js",
+--           "http://www.haskell.org/static/js/jquery.console.js",
+--           "http://www.haskell.org/static/js/home.js",
+--           "http://www.haskell.org/static/js/bootstrap.min.js",
+--           "http://www.haskell.org/static/js/jquery.js",
+--           "http://www.haskell.org/static/img/rackspace.svg",
+--           "https://i.vimeocdn.com/video/452269027_150x84.jpg",
+--           "https://i.vimeocdn.com/video/456929840_150x84.jpg",
+--           "https://i.vimeocdn.com/video/456929997_150x84.jpg",
+--           "https://i.vimeocdn.com/video/469227196_150x84.jpg",
+--           "https://i.vimeocdn.com/video/469235326_150x84.jpg",
+--           "https://i.vimeocdn.com/video/476988542_150x84.jpg",
+--           "http://www.haskell.org/static/img/haskell-logo.svg",
+--           "http://www.haskell.org/static/css/hl.min.css",
+--           "https://fonts.googleapis.com/css",
+--           "http://www.haskell.org/static/img/favicon.ico"
+--       ]
+--   },
+--   ... (all reachable pages)
+--   ]
 main :: IO()
 main = do
-  putStrLn "Please provide a starting URL. \
-  \Suggested format: \"http://www.example.com/\":"
+  putStrLn "Please provide a starting URL:"
   websiteUrl <- getLine
   pages <- crawlSubdomain [] [] [parseUrl $ L.pack websiteUrl]
   putStrLn ""
@@ -42,6 +73,7 @@ crawlSubdomain seenPages _ []
   = return seenPages
 crawlSubdomain seenPages seenUrls urls@(currentUrl : _) = do
   -- Try to read current page
+  L.putStr $ encodePretty seenPages
   maybeCurrentSource <- try $ simpleHttp $ show currentUrl
   case maybeCurrentSource of
     Left (_ :: HttpException) -> crawlFailure seenPages seenUrls urls
@@ -59,7 +91,7 @@ crawlFailure :: [Webpage]       -- ^ The list of visited webpages
 crawlFailure _ _ []
   = error "Pre condition for crawlFailure not met."
 crawlFailure seenPages seenUrls (currentUrl : nextUrls) = do
-  -- Page not reachable, continue to next url
+  -- Page not reachable, continue to next URL
   putStrLn ("WARNING: The page " ++ show currentUrl ++ " could not be reached.")
   crawlSubdomain seenPages (currentUrl : seenUrls) nextUrls
 

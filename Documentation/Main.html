@@ -3,8 +3,39 @@ window.onload = function () {pageLoad();setSynopsis("mini_Main.html");};
 //]]>
 </script></head><body><div id="package-header"><ul class="links" id="page-menu"><li><a href="index.html">Contents</a></li><li><a href="doc-index.html">Index</a></li></ul><p class="caption empty">&nbsp;</p></div><div id="content"><div id="module-header"><table class="info"><tr><th>Safe Haskell</th><td>None</td></tr></table><p class="caption">Main</p></div><div id="synopsis"><p id="control.syn" class="caption expander" onclick="toggleSection('syn')">Synopsis</p><ul id="section.syn" class="hide" onclick="toggleSection('syn')"><li class="src short"><a href="#v:main">main</a> :: IO ()</li><li class="src short"><a href="#v:crawlSubdomain">crawlSubdomain</a> :: [<a href="Utils-HtmlParser.html#t:Webpage">Webpage</a>] -&gt; [<a href="Utils-UrlParser.html#t:Url">Url</a>] -&gt; [<a href="Utils-UrlParser.html#t:Url">Url</a>] -&gt; IO [<a href="Utils-HtmlParser.html#t:Webpage">Webpage</a>]</li><li class="src short"><a href="#v:crawlFailure">crawlFailure</a> :: [<a href="Utils-HtmlParser.html#t:Webpage">Webpage</a>] -&gt; [<a href="Utils-UrlParser.html#t:Url">Url</a>] -&gt; [<a href="Utils-UrlParser.html#t:Url">Url</a>] -&gt; IO [<a href="Utils-HtmlParser.html#t:Webpage">Webpage</a>]</li><li class="src short"><a href="#v:crawlSuccess">crawlSuccess</a> :: [<a href="Utils-HtmlParser.html#t:Webpage">Webpage</a>] -&gt; [<a href="Utils-UrlParser.html#t:Url">Url</a>] -&gt; [<a href="Utils-UrlParser.html#t:Url">Url</a>] -&gt; ByteString -&gt; IO [<a href="Utils-HtmlParser.html#t:Webpage">Webpage</a>]</li></ul></div><div id="interface"><h1>Documentation</h1><div class="top"><p class="src"><a name="v:main" class="def">main</a> :: IO ()</p><div class="doc"><p>Given URL as user input, crawls and pretty prints JSON of subdomain
    structure.
+   Input can be given with or without scheme. If no scheme is provided, http
+   will be selected by default.
    Output JSON is a list of viewable webpages, each with its URL and a list
-   of any assets.</p></div></div><div class="top"><p class="src"><a name="v:crawlSubdomain" class="def">crawlSubdomain</a></p><div class="subs arguments"><p class="caption">Arguments</p><table><tr><td class="src">:: [<a href="Utils-HtmlParser.html#t:Webpage">Webpage</a>]</td><td class="doc"><p>The accumulator for visited webpages</p></td></tr><tr><td class="src">-&gt; [<a href="Utils-UrlParser.html#t:Url">Url</a>]</td><td class="doc"><p>The accumulator for visited URLs</p></td></tr><tr><td class="src">-&gt; [<a href="Utils-UrlParser.html#t:Url">Url</a>]</td><td class="doc"><p>The list of URLs to still visit</p></td></tr><tr><td class="src">-&gt; IO [<a href="Utils-HtmlParser.html#t:Webpage">Webpage</a>]</td><td class="doc"><p>Returns final list of visited webpages</p></td></tr></table></div><div class="doc"><p>Accumulates a list of unique visited webpages and URLs by crawling a given
+   of any assets.
+   Example:</p><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>main
+</code></strong>Please provide a starting URL:
+<code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>www.haskell.org
+</code></strong>[
+{
+    &quot;url&quot;: &quot;http://www.haskell.org/&quot;,
+    &quot;assets&quot;: [
+        &quot;http://www.haskell.org/static/js/tryhaskell.pages.js&quot;,
+        &quot;http://www.haskell.org/static/js/tryhaskell.js&quot;,
+        &quot;http://www.haskell.org/static/js/jquery.console.js&quot;,
+        &quot;http://www.haskell.org/static/js/home.js&quot;,
+        &quot;http://www.haskell.org/static/js/bootstrap.min.js&quot;,
+        &quot;http://www.haskell.org/static/js/jquery.js&quot;,
+        &quot;http://www.haskell.org/static/img/rackspace.svg&quot;,
+        &quot;https://i.vimeocdn.com/video/452269027_150x84.jpg&quot;,
+        &quot;https://i.vimeocdn.com/video/456929840_150x84.jpg&quot;,
+        &quot;https://i.vimeocdn.com/video/456929997_150x84.jpg&quot;,
+        &quot;https://i.vimeocdn.com/video/469227196_150x84.jpg&quot;,
+        &quot;https://i.vimeocdn.com/video/469235326_150x84.jpg&quot;,
+        &quot;https://i.vimeocdn.com/video/476988542_150x84.jpg&quot;,
+        &quot;http://www.haskell.org/static/img/haskell-logo.svg&quot;,
+        &quot;http://www.haskell.org/static/css/hl.min.css&quot;,
+        &quot;https://fonts.googleapis.com/css&quot;,
+        &quot;http://www.haskell.org/static/img/favicon.ico&quot;
+    ]
+},
+... (all reachable pages)
+]
+</pre></div></div><div class="top"><p class="src"><a name="v:crawlSubdomain" class="def">crawlSubdomain</a></p><div class="subs arguments"><p class="caption">Arguments</p><table><tr><td class="src">:: [<a href="Utils-HtmlParser.html#t:Webpage">Webpage</a>]</td><td class="doc"><p>The accumulator for visited webpages</p></td></tr><tr><td class="src">-&gt; [<a href="Utils-UrlParser.html#t:Url">Url</a>]</td><td class="doc"><p>The accumulator for visited URLs</p></td></tr><tr><td class="src">-&gt; [<a href="Utils-UrlParser.html#t:Url">Url</a>]</td><td class="doc"><p>The list of URLs to still visit</p></td></tr><tr><td class="src">-&gt; IO [<a href="Utils-HtmlParser.html#t:Webpage">Webpage</a>]</td><td class="doc"><p>Returns final list of visited webpages</p></td></tr></table></div><div class="doc"><p>Accumulates a list of unique visited webpages and URLs by crawling a given
    list of URLs.
    Prints update for each page crawled and for each page not found.
    Accumulators should usually be initiated as empty lists.</p></div></div><div class="top"><p class="src"><a name="v:crawlFailure" class="def">crawlFailure</a></p><div class="subs arguments"><p class="caption">Arguments</p><table><tr><td class="src">:: [<a href="Utils-HtmlParser.html#t:Webpage">Webpage</a>]</td><td class="doc"><p>The list of visited webpages</p></td></tr><tr><td class="src">-&gt; [<a href="Utils-UrlParser.html#t:Url">Url</a>]</td><td class="doc"><p>The list of visited URLs</p></td></tr><tr><td class="src">-&gt; [<a href="Utils-UrlParser.html#t:Url">Url</a>]</td><td class="doc"><p>The list of this URL and URLs to still

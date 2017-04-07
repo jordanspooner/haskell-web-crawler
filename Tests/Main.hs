@@ -68,7 +68,8 @@ expectedAssets2
     , Url "http:" "www.schuller.it" "/index-Dateien/ustar.jpg"
     , Url "http:" "www.schuller.it" "/index-Dateien/asc.png"
     , Url "http:" "www.schuller.it" "/index-Dateien/aria.jpg"
-    , Url "http:" "www.schuller.it" "/index-Dateien/MixedEmotions-Logo-300x288.png"
+    , Url "http:" "www.schuller.it" "/index-Dateien/MixedEmotions-Logo-300x288.\
+                                     \png"
     , Url "http:" "www.schuller.it" "/index-Dateien/sewa-logo.png"
     , Url "http:" "www.schuller.it" "/iHEARu-logo-small.png"
     , Url "http:" "www.schuller.it" "/vocemoapi.png"

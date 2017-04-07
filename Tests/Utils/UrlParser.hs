@@ -27,8 +27,6 @@ urlParserTests = do
   _ <- runTestTT parseSchemeTests
   putStrLn "* parseAuthority *"
   _ <- runTestTT parseAuthorityTests
-  putStrLn "* parsePath *"
-  _ <- runTestTT parsePathTests
   putStrLn "* normalise *"
   _ <- runTestTT normaliseTests
   putStrLn "* isValidLinkedUrl *"
@@ -45,7 +43,8 @@ urlParserTests = do
 urlBs1, urlBs2, urlBs3, urlBs4, urlBs5, urlBs6, urlBs7, urlBs8, urlBs9, urlBs10,
   urlBs11, urlBs12, urlBs13, urlBs14, urlBs15, urlBs16, urlBs17, urlBs18,
   urlBs19, urlBs20, urlBs21, urlBs22, urlBs23, urlBs24, urlBs25, urlBs26,
-  urlBs27, urlBs28, urlBs29, urlBs30, urlBs31, urlBs32 :: L.ByteString
+  urlBs27, urlBs28, urlBs29, urlBs30, urlBs31, urlBs32, urlBs33, urlBs34
+  :: L.ByteString
 
 urlBs1 = "http://www.example.com"
 urlBs2 = "https://www.example.com"
@@ -87,6 +86,9 @@ urlBs30 = "http://www.google.com/"
 urlBs31 = "https://www.google.com/dir1/dir2/dir3/dir4/"
 urlBs32 = "http://mail.google.com/"
 
+urlBs33 = "http://example.com/décembre.html"
+urlBs34 = "http://example.com/dir"
+
 --------------------------------------------------------------------------------
 -- TEST URLS
 
@@ -97,6 +99,8 @@ url4', url17', url18', url21', url22', url23', url24', url25', url26', url27',
   url28', url29' :: Url
 
 url30, url31, url32 :: Url
+
+url33, url34 :: Url
 
 url1  = Url "http:" "www.example.com" "/"
 url2  = Url "https:" "www.example.com" "/"
@@ -119,10 +123,10 @@ url14 = url9
 url15 = url1
 url16 = url2
 
-url17  = Url "http:" "/" "/"
-url18  = Url "http:" "/" "/"
-url17' = url1  -- Relative to url9
-url18' = url1  -- Relative to url9
+url17  = Url "http:" "" "/"
+url18  = Url "http:" "" "/"
+url17' = url9  -- Relative to url9
+url18' = url9  -- Relative to url9
 
 url19  = url8
 url20  = url8
@@ -142,6 +146,12 @@ url29' = url8  -- Relative to url9
 url30 = Url "http:" "www.google.com" "/"
 url31 = Url "https:" "www.google.com" "/dir1/dir2/dir3/dir4/"
 url32 = Url "http:" "mail.google.com" "/"
+
+url33  = Url "http:" "example.com" "/d%e9cembre.html"
+url33' = url3  -- urlBs24 relative to url33
+url34  = Url "http:" "example.com" "/dir/"
+url34' = Url "http:" "example.com" "/dir/page.html"
+               -- urlBs22 relative to url34
 
 --------------------------------------------------------------------------------
 -- FUNCTIONS to PARSE URL LISTS TESTS
@@ -235,30 +245,22 @@ parseAuthorityTests
             ~?= (Nothing, "../rest")
         ]
 
-parsePathTests :: Test
-parsePathTests
- = test [ "empty" ~: parsePath ""               ~?= "/"
-        , "?"     ~: parsePath "?rest"          ~?= "/"
-        , "#"     ~: parsePath "#rest"          ~?= "/"
-        , "page?" ~: parsePath "page.html?rest" ~?= "page.html"
-        , "page#" ~: parsePath "page.html#rest" ~?= "page.html"
-        , "/page" ~: parsePath "/page.html"     ~?= "/page.html"
-        , "dir/"  ~: parsePath "dir/rest"       ~?= "dir/rest"
-        ]
-
 --------------------------------------------------------------------------------
 -- PARSING HELPER FUNCTIONS TESTS
 
 normaliseTests :: Test
 normaliseTests
- = test [ "./"        ~: normalise "/././1/"         ~?= "/1/"
+ = test [ "empty"     ~: normalise ""                ~?= "/"
+        , "./"        ~: normalise "/././1/"         ~?= "/1/"
         , "../"       ~: normalise "/../../1/"       ~?= "/1/"
         , "index"     ~: normalise "/index.html"     ~?= "/"
         , "dir/."     ~: normalise "/1/././2/././3/" ~?= "/1/2/3/"
         , "dir/.."    ~: normalise "/1/2/3/../../2/" ~?= "/1/2/"
         , "dir/index" ~: normalise "/1/2/index.html" ~?= "/1/2/"
-        , "dir"       ~: normalise "/1/2/3/"         ~?= "/1/2/3/"
+        , "dir"       ~: normalise "/1/2/3"          ~?= "/1/2/3/"
         , "dir/page"  ~: normalise "/1/2/page.html"  ~?= "/1/2/page.html"
+        , "?"         ~: normalise "/page?rest"      ~?= "/page"
+        , "#"         ~: normalise "/page#rest"      ~?= "/page"
         ]
 
 --------------------------------------------------------------------------------
