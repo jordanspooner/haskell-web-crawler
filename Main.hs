@@ -73,7 +73,6 @@ crawlSubdomain seenPages _ []
   = return seenPages
 crawlSubdomain seenPages seenUrls urls@(currentUrl : _) = do
   -- Try to read current page
-  L.putStr $ encodePretty seenPages
   maybeCurrentSource <- try $ simpleHttp $ show currentUrl
   case maybeCurrentSource of
     Left (_ :: HttpException) -> crawlFailure seenPages seenUrls urls
