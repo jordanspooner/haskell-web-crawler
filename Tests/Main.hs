@@ -2,6 +2,7 @@
 
 module Tests.Main where
 
+import           Data.IORef
 import           Data.List        (sort)
 
 import           Test.HUnit
@@ -94,15 +95,21 @@ expectedLinks2
 
 crawlSubdomainTests :: Test
 crawlSubdomainTests
-  = test [ "1" ~: do actualWebpageList1 <- sort <$> crawlSubdomain [] []
-                                           [parseUrl "qiangfeng.co.uk"]
-                     assertEqual "1" (map wsort actualWebpageList1)
-                                     expectedWebpageList1
-         , "2" ~: do actualWebpageList2 <- sort <$> crawlSubdomain [] []
-                                           [parseUrl "schuller.it"]
-                     assertEqual "2" (map wsort actualWebpageList2)
-                                     expectedWebpageList2
-         , "3" ~: do actualWebpageList3 <- sort <$> crawlSubdomain [] []
-                                           [parseUrl "dsaseguheagu.com"]
-                     assertEqual "3" actualWebpageList3 []
+  = test [ "qf" ~: do let currentUrl = parseUrl "qiangfeng.co.uk"
+                      seenUrls <- newIORef [currentUrl]
+                      actualWebpageList1 <- sort <$> crawlSubdomain currentUrl
+                                                                    seenUrls
+                      assertEqual "1" (map wsort actualWebpageList1)
+                                       expectedWebpageList1
+         , "bs" ~: do let currentUrl = parseUrl "schuller.it"
+                      seenUrls <- newIORef [currentUrl]
+                      actualWebpageList2 <- sort <$> crawlSubdomain currentUrl
+                                                                    seenUrls
+                      assertEqual "2" (map wsort actualWebpageList2)
+                                       expectedWebpageList2
+         , "na" ~: do let currentUrl = parseUrl "doesntexist.url"
+                      seenUrls <- newIORef [currentUrl]
+                      actualWebpageList3 <- sort <$> crawlSubdomain currentUrl
+                                                                    seenUrls
+                      assertEqual "3" actualWebpageList3 []
          ]

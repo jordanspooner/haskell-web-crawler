@@ -2,12 +2,14 @@
 
 module Main where
 
-import           Control.Exception          (try)
-import           Data.List                  ((\\))
+import           Control.Concurrent.ParallelIO (parallel)
+import           Control.Exception             (try)
+import           Data.IORef
+import           Data.List                     ((\\))
 
-import           Data.Aeson.Encode.Pretty   (encodePretty)
-import qualified Data.ByteString.Lazy.Char8 as L
-import           Network.HTTP.Conduit       (HttpException, simpleHttp)
+import           Data.Aeson.Encode.Pretty      (encodePretty)
+import qualified Data.ByteString.Lazy.Char8    as L
+import           Network.HTTP.Conduit          (HttpException, simpleHttp)
 
 import           Utils.HtmlParser
 import           Utils.UrlParser
@@ -21,7 +23,7 @@ import           Utils.UrlParser
 --   Output JSON is a list of viewable webpages, each with its URL and a list
 --   of any assets.
 --   Example:
---   
+--
 --   >>> main
 --   Please provide a starting URL:
 --   >>> www.haskell.org
@@ -53,63 +55,59 @@ import           Utils.UrlParser
 main :: IO()
 main = do
   putStrLn "Please provide a starting URL:"
-  websiteUrl <- getLine
-  pages <- crawlSubdomain [] [] [parseUrl $ L.pack websiteUrl]
+  inputUrl <- getLine
+  let currentUrl = parseUrl $ L.pack inputUrl
+  seenUrls <- newIORef [currentUrl]
+  pages <- crawlSubdomain currentUrl seenUrls
   putStrLn ""
   putStrLn "Result:"
   L.putStr $ encodePretty pages
   putStrLn ""
 
--- | Accumulates a list of unique visited webpages and URLs by crawling a given
---   list of URLs.
---   Prints update for each page crawled and for each page not found.
---   Accumulators should usually be initiated as empty lists.
-crawlSubdomain :: [Webpage]       -- ^ The accumulator for visited webpages
-                  -> [Url]        -- ^ The accumulator for visited URLs
-                  -> [Url]        -- ^ The list of URLs to still visit
-                  -> IO [Webpage] -- ^ Returns final list of visited webpages
-crawlSubdomain seenPages _ []
-  -- All viewable pages seen, return result
-  = return seenPages
-crawlSubdomain seenPages seenUrls urls@(currentUrl : _) = do
-  -- Try to read current page
+--------------------------------------------------------------------------------
+
+-- | Crawls the subdomain of the given URL, returning a list of Webpages of all
+--   the reachable pages from the given URL, excluding any which are at URLs in
+--   the given list of seen URLs.
+crawlSubdomain :: Url             -- ^ The URL to start crawling from
+                  -> IORef [Url]  -- ^ A list of seen URLs to be excluded
+                  -> IO [Webpage] -- ^ Returns a list of all reachable Webpages
+crawlSubdomain currentUrl seenUrls = do
   maybeCurrentSource <- try $ simpleHttp $ show currentUrl
   case maybeCurrentSource of
-    Left (_ :: HttpException) -> crawlFailure seenPages seenUrls urls
-    Right currentSource       -> crawlSuccess seenPages seenUrls urls
-                                              currentSource
+    Left (_ :: HttpException) -> crawlFailure currentUrl
+    Right currentSource       -> crawlSuccess currentSource currentUrl seenUrls
 
--- | Outputs a warning message with URL not reached and crawls remaining URLs
---   with this URL marked as seen.
---   There *must be at least one URL to still visit*.
-crawlFailure :: [Webpage]       -- ^ The list of visited webpages
-                -> [Url]        -- ^ The list of visited URLs
-                -> [Url]        -- ^ The list of this URL and URLs to still
-                                --   visit
-                -> IO [Webpage] -- ^ Returns final list of visited webpages
-crawlFailure _ _ []
-  = error "Pre condition for crawlFailure not met."
-crawlFailure seenPages seenUrls (currentUrl : nextUrls) = do
-  -- Page not reachable, continue to next URL
+-- | Outputs a warning message with the URL that could not be reached. Returns
+--   an empty list of Webpages.
+crawlFailure :: Url             -- ^ The URL that could not be reached.
+                -> IO [Webpage] -- ^ Returns an empty list.
+crawlFailure currentUrl = do
   putStrLn ("WARNING: The page " ++ show currentUrl ++ " could not be reached.")
-  crawlSubdomain seenPages (currentUrl : seenUrls) nextUrls
+  return []
 
--- | Outputs message with crawled URL, crawls and saves Webpage, marks URL as
---   seen and crawls remaining URLs, including any URLs marked on this page.
---   There *must be at least one URL to still visit*.
-crawlSuccess :: [Webpage]       -- ^ The list of visited webpages
-                -> [Url]        -- ^ The list of visited URLs
-                -> [Url]        -- ^ The list of this URL and URLs to still
-                                --   visit
-                -> L.ByteString -- ^ The source at this URL
-                -> IO [Webpage] -- ^ Returns final list of visited webpages
-crawlSuccess _ _ [] _
-  = error "Pre condition for crawlSuccess not met."
-crawlSuccess seenPages seenUrls urls@(currentUrl : nextUrls) currentSource = do
-  -- Find all linked urls on current page
+-- | Outputs a message with the URL being crawled. Crawls the webpage, updates
+--   the seen URLs with any unseen URLs present on that page, and concurrently
+--   crawls the unseen URLs. Returns all reachable pages that haven't been seen
+--   yet.
+crawlSuccess :: L.ByteString    -- ^ The HTML source of the given URL
+                -> Url          -- ^ The URL being crawled
+                -> IORef [Url]  -- ^ A list of seen URLs to be excluded
+                -> IO [Webpage] -- ^ Returns a list of all reachable Webpages
+crawlSuccess currentSource currentUrl seenUrls = do
   putStrLn ("Crawling " ++ show currentUrl)
   let currentPage = crawlWebpage currentUrl currentSource
-  -- Mark current url as seen and vist unseen urls from current page
-  let newUrls = links currentPage \\ (seenUrls ++ urls)
-  crawlSubdomain (currentPage : seenPages) (currentUrl : seenUrls)
-    $ nextUrls ++ newUrls
+  newUrls <- atomicModifyIORef' seenUrls (updateUrls $ links currentPage)
+  nextPages <- parallel $ map (`crawlSubdomain` seenUrls) newUrls
+  return (currentPage : concat nextPages)
+
+-- | Given a list of URLs, produces a tuple conataining an updated list of seen
+--   URLs and a list of any unseen URLs.
+updateUrls :: [Url]             -- ^ A list of crawled URLs to be processed
+              -> [Url]          -- ^ The list of URLs seen so far
+              -> ([Url], [Url]) -- ^ Returns a tuple containing the new list of
+                                --   seen URLs, and a list of unseen URLs
+updateUrls currentPageUrls seenUrls
+  = (unseenUrls ++ seenUrls, unseenUrls)
+  where
+    unseenUrls = currentPageUrls \\ seenUrls

@@ -100,7 +100,7 @@ url4', url17', url18', url21', url22', url23', url24', url25', url26', url27',
 
 url30, url31, url32 :: Url
 
-url33, url34 :: Url
+url33, url34, url33', url34' :: Url
 
 url1  = Url "http:" "www.example.com" "/"
 url2  = Url "https:" "www.example.com" "/"
@@ -149,7 +149,7 @@ url32 = Url "http:" "mail.google.com" "/"
 
 url33  = Url "http:" "example.com" "/d%e9cembre.html"
 url33' = url3  -- urlBs24 relative to url33
-url34  = Url "http:" "example.com" "/dir/"
+url34  = Url "http:" "example.com" "/dir"
 url34' = Url "http:" "example.com" "/dir/page.html"
                -- urlBs22 relative to url34
 
@@ -257,7 +257,7 @@ normaliseTests
         , "dir/."     ~: normalise "/1/././2/././3/" ~?= "/1/2/3/"
         , "dir/.."    ~: normalise "/1/2/3/../../2/" ~?= "/1/2/"
         , "dir/index" ~: normalise "/1/2/index.html" ~?= "/1/2/"
-        , "dir"       ~: normalise "/1/2/3"          ~?= "/1/2/3/"
+        , "dir"       ~: normalise "/1/2/3"          ~?= "/1/2/3"
         , "dir/page"  ~: normalise "/1/2/page.html"  ~?= "/1/2/page.html"
         , "?"         ~: normalise "/page?rest"      ~?= "/page"
         , "#"         ~: normalise "/page#rest"      ~?= "/page"

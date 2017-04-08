@@ -70,9 +70,9 @@ linkedUrl1, linkedUrl2, linkedUrl3, linkedUrl4, linkedUrl5, linkedUrl6,
 
 linkedUrl1 = Url "http:" "jordanspooner.com" "/page/"
 linkedUrl2 = Url "http:" "jordanspooner.com" "/about/"
-linkedUrl3 = Url "http:" "jordanspooner.com" "/page/test/"
+linkedUrl3 = Url "http:" "jordanspooner.com" "/page/test"
 linkedUrl4 = Url "http:" "jordanspooner.com" "/page/page.html"
-linkedUrl5 = Url "http:" "jordanspooner.com" "/other/"
+linkedUrl5 = Url "http:" "jordanspooner.com" "/other"
 linkedUrl6 = Url "http:" "jordanspooner.com" "/"
 linkedUrl7 = Url "http:" "www.google.com" "/"               -- Invalid link
 linkedUrl8 = Url "http:" "/" "/"                            -- Invalid link

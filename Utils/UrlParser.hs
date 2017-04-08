@@ -3,11 +3,11 @@
 
 module Utils.UrlParser where
 
-import           Data.Char                  (toLower, ord)
+import           Data.Char                  (ord, toLower)
 import           Data.List                  (nub)
 import           Data.Maybe                 (catMaybes, fromJust, fromMaybe,
                                              isJust)
-import           Numeric
+import           Numeric                    (showHex)
 
 import qualified Data.ByteString.Lazy.Char8 as L
 
@@ -164,13 +164,7 @@ normalise bs
 -- | Helper function for normalise
 normalise' :: L.ByteString -> [L.ByteString] -> [L.ByteString]
 normalise' "" accum
-  -- If the link doesn't look like a file, make sure it ends with a '/'
-  | not (null accum) && final /= "/" && not (isFile final)
-                            = L.append (head accum) "/" : tail accum
-  | otherwise               = accum
-  where
-    final = head accum
-
+  = accum
 normalise' input accum
   -- REMOVE DOT SEGMENTS and INDEX.HTML
   | take2 == "//"           = normalise' (L.tail input) accum

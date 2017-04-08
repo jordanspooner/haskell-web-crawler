@@ -2,9 +2,9 @@
 
 ## Functionality
 
-This is a command line program, that given a URL, returns a JSON which lists all the viewable pages on that subdomain, and for each page gives its URL and a list of any assets which it links to.
+This is a concurrent web crawler that ouptus to STDOUT a JSON formatted list of all the reachable pages on that subdomain, and for each page gives its URL and a list of any static assets which it links to.
 
-## Example
+### Example
 
 Given the input `www.haskell.org`, the program should return a JSON formatted string similar to the one below:
 
@@ -64,24 +64,36 @@ Given the input `www.haskell.org`, the program should return a JSON formatted st
 
 ## Setup
 
+### Requirements
+
 This program requires GHC and several dependencies, which can be installed using Cabal. I suggest downloading and installing the Haskell Platform (if you don't already have it), which is available on most package installers. E.g. using `apt-get`, you can install the Haskell Platform with the command `sudo apt-get install haskell-platform`.
 
-To install the dependencies, `cd` into the main directory and run the command `sudo cabal install --only-dependencies`.
+To install the dependencies, `cd` into the `simple-web-crawler` directory and run the command `sudo cabal install --only-dependencies`.
+
+### Compilation
+
+To compile the program so that you can run it in a multithreaded environment, you should use the command `ghc -O2 --make Main.hs -threaded -rtsopts`.
+
+* `ghc` is the Glasgow Haskell compiler. It compiles the Haskell code and links it to a runtime system.
+* `-O2` specifies the level of optimisation to be the highest. Since there isn't too much code to compile, compilation should still be fairly quick.
+* `--make Main.hs` will build the Haskell program `Main.hs`, automatically figuring out any dependencies.
+* `-threaded` uses the threaded runtime (allowing the program to run with multiple threads).
+* `-rtsopts` allows us to change some of the options for the runtime system.
 
 ## Usage
 
-To run the program, you just need to `runghc Main`.
+The program can be run with the command `./Main +RTS -Nx`, where you should change `x` (the number of threads) to the number of cores you have (or a slightly higher value). If you're not sure, just omit the `x`, and the runtime will choose a value of `x` itself.
 
 ## Known Bugs (Features?) and Issues
 
-- As part of the normalisation process, all queries and fragments are removed from URLs. Furthermore a '/' will be added to the end of any path segment without a file-extension (note that this includes *files without an extension*).
+- As part of the normalisation process, all queries and fragments are removed from URLs.
 - When parsing HTML, the program will consider *everything*: this includes commented code and code that is within scripts.
 - If the crawler finds a link (to a page on the current subdomain) that redirects, it will follow this link and crawl the redirected page, including if that page is actually on a different subdomain. Note however that it will not continue to crawl once it is on a different subdomain.
 
-There may be other bugs present, as I have had to write code to parse URLs and HTML from scratch. In any other language, I would use libraries for these tasks, but unfortunately Haskell's libraries are rather underwhelming. :cry:
+There may be other bugs present, as I have had to write code to parse URLs and HTML from scratch. In any other language, I would use libraries for these rather complex tasks, but unfortunately Haskell's libraries are rather underwhelming. :cry:
 
 ## Testing and Documentation
 
 If you would like to reuse this code, make changes or simply investigate the code more deeply, you might find the following resources useful:
 - A test suite can be run with the command `runghc Tests`.
-- Haddock generated documentation for almost all included functions can be found [here](https://www.doc.ic.ac.uk/~js4416/100/simple-web-crawler/docs/) or in the Documentation folder.
+- Haddock generated documentation for almost all included functions can be found [here](https://www.doc.ic.ac.uk/~js4416/100/simple-web-crawler/docs/) or in the `Documentation` directory.
