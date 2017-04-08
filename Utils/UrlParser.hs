@@ -167,23 +167,26 @@ normalise' "" accum
   = accum
 normalise' input accum
   -- REMOVE DOT SEGMENTS and INDEX.HTML
-  | take2 == "//"           = normalise' (L.tail input) accum
-  | take3 == "/.."          = normalise' (L.cons '/' drop3) $ drop 1 accum
+  | take2 == "//"              = normalise' (L.tail input) accum
+  | take3 == "/.."             = normalise' (L.cons '/' drop3) $ drop 1 accum
   -- If it looks like a file, go back a directory
-  | take2 == "/."           = if not (null accum) && isFile (head accum)
-                              then normalise' (L.cons '/' drop2) $ tail accum
-                              else normalise' (L.cons '/' drop2) accum
-  | take11 == "/index.html" = normalise' (L.cons '/' drop11) accum
+  | take2 == "/."              = if headIsFile
+                                 then normalise' (L.cons '/' drop2) $ tail accum
+                                 else normalise' (L.cons '/' drop2) accum
+  | take11 == "/index.html"    = normalise' (L.cons '/' drop11) accum
   -- REMOVE QUERIES and FRAGMENTS
-  | L.take 1 input == "#"   = accum
-  | L.take 1 input == "?"   = accum
+  | L.take 1 input == "#"      = accum
+  | L.take 1 input == "?"      = accum
+  -- If it's a file following a file, ignore the preceeding segment
+  | isFile input && headIsFile = L.cons '/' input : tail accum
   -- OTHERWISE CONTINUE
-  | otherwise               = normalise' rest
-                              $ L.cons '/' this : accum
+  | otherwise                  = normalise' rest
+                                 $ L.cons '/' this : accum
   where
     (take2, drop2)   = L.splitAt 2 input
     (take3, drop3)   = L.splitAt 3 input
     (take11, drop11) = L.splitAt 11 input
+    headIsFile       = not (null accum) && isFile (head accum)
     (this, rest)     = L.break (`elem` endAuthChars) $ if L.head input == '/'
                                                        then L.tail input
                                                        else input
@@ -228,7 +231,7 @@ isValidChar c
   = 'a' <= c && c <= 'z'
     || '0' <= c && c <= '9'
     || 'A' <= c && c <= 'Z'
-    || c `elem` ("-_.~!*'();:@&=+$,/?#[]" :: String)
+    || c `elem` ("-_.~!*'();:@&=+$,/?#[]%" :: String)
 
 --------------------------------------------------------------------------------
 -- FUNCTIONS to CHECK and SHOW URLS

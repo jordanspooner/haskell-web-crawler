@@ -100,7 +100,7 @@ url4', url17', url18', url21', url22', url23', url24', url25', url26', url27',
 
 url30, url31, url32 :: Url
 
-url33, url34, url33', url34' :: Url
+url33, url34, url33', url33'', url34' :: Url
 
 url1  = Url "http:" "www.example.com" "/"
 url2  = Url "https:" "www.example.com" "/"
@@ -147,10 +147,11 @@ url30 = Url "http:" "www.google.com" "/"
 url31 = Url "https:" "www.google.com" "/dir1/dir2/dir3/dir4/"
 url32 = Url "http:" "mail.google.com" "/"
 
-url33  = Url "http:" "example.com" "/d%e9cembre.html"
-url33' = url3  -- urlBs24 relative to url33
-url34  = Url "http:" "example.com" "/dir"
-url34' = Url "http:" "example.com" "/dir/page.html"
+url33   = Url "http:" "example.com" "/d%e9cembre.html"
+url33'  = url8 -- urlBs8 relative to url33
+url33'' = url3 -- urlBs24 relative to url33
+url34   = Url "http:" "example.com" "/dir"
+url34'  = Url "http:" "example.com" "/dir/page.html"
                -- urlBs22 relative to url34
 
 --------------------------------------------------------------------------------
@@ -197,22 +198,30 @@ parseUrlTests
          , "url18" ~: parseUrl urlBs18 ~?= url18
          , "url19" ~: parseUrl urlBs19 ~?= url19
          , "url20" ~: parseUrl urlBs20 ~?= url20
+         , "url30" ~: parseUrl urlBs30 ~?= url30
+         , "url31" ~: parseUrl urlBs31 ~?= url31
+         , "url32" ~: parseUrl urlBs32 ~?= url32
+         , "url33" ~: parseUrl urlBs33 ~?= url33
+         , "url34" ~: parseUrl urlBs34 ~?= url34
          ]
 
 parseUrlRelativeToTests :: Test
 parseUrlRelativeToTests
-  = test [ "url4'"  ~: parseUrlRelativeTo urlBs4 url2    ~?= url4'
-         , "url17'" ~: parseUrlRelativeTo urlBs17 url9   ~?= url17'
-         , "url18'" ~: parseUrlRelativeTo urlBs18 url9   ~?= url18'
-         , "url21'" ~: parseUrlRelativeTo urlBs21 url1   ~?= url21'
-         , "url22'" ~: parseUrlRelativeTo urlBs22 url1   ~?= url22'
-         , "url23'" ~: parseUrlRelativeTo urlBs23 url9   ~?= url23'
-         , "url24'" ~: parseUrlRelativeTo urlBs24 url9   ~?= url24'
-         , "url25'" ~: parseUrlRelativeTo urlBs25 url9   ~?= url25'
-         , "url26'" ~: parseUrlRelativeTo urlBs26 url23' ~?= url26'
-         , "url27'" ~: parseUrlRelativeTo urlBs27 url1   ~?= url27'
-         , "url28'" ~: parseUrlRelativeTo urlBs28 url9   ~?= url28'
-         , "url28'" ~: parseUrlRelativeTo urlBs29 url9   ~?= url29'
+  = test [ "url4'"   ~: parseUrlRelativeTo urlBs4 url2    ~?= url4'
+         , "url17'"  ~: parseUrlRelativeTo urlBs17 url9   ~?= url17'
+         , "url18'"  ~: parseUrlRelativeTo urlBs18 url9   ~?= url18'
+         , "url21'"  ~: parseUrlRelativeTo urlBs21 url1   ~?= url21'
+         , "url22'"  ~: parseUrlRelativeTo urlBs22 url1   ~?= url22'
+         , "url23'"  ~: parseUrlRelativeTo urlBs23 url9   ~?= url23'
+         , "url24'"  ~: parseUrlRelativeTo urlBs24 url9   ~?= url24'
+         , "url25'"  ~: parseUrlRelativeTo urlBs25 url9   ~?= url25'
+         , "url26'"  ~: parseUrlRelativeTo urlBs26 url23' ~?= url26'
+         , "url27'"  ~: parseUrlRelativeTo urlBs27 url1   ~?= url27'
+         , "url28'"  ~: parseUrlRelativeTo urlBs28 url9   ~?= url28'
+         , "url28'"  ~: parseUrlRelativeTo urlBs29 url9   ~?= url29'
+         , "url33'"  ~: parseUrlRelativeTo urlBs8 url33   ~?= url33'
+         , "url33''" ~: parseUrlRelativeTo urlBs24 url33  ~?= url33''
+         , "url34'"  ~: parseUrlRelativeTo urlBs22 url34  ~?= url34'
          ]
 
 parseSchemeTests :: Test
