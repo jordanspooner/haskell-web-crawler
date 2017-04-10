@@ -29,7 +29,7 @@ instance Show Url where
 -- | Two Urls are considered equal if their authorities and paths are equal.
 instance Eq Url where
   (==) (Url _ auth1 path1) (Url _ auth2 path2)
-    = auth1 == auth2 && path1 == path2
+    = auth1 == auth2 && equalPaths path1 path2
 
 --------------------------------------------------------------------------------
 -- FUNCTIONS to PARSE URL LISTS
@@ -168,7 +168,12 @@ normalise' "" accum
 normalise' input accum
   -- REMOVE DOT SEGMENTS and INDEX.HTML
   | take2 == "//"              = normalise' (L.tail input) accum
-  | take3 == "/.."             = normalise' (L.cons '/' drop3) $ drop 1 accum
+  -- If it looks like a file, go back two directories
+  | take3 == "/.."             = if headIsFile
+                                 then normalise' 
+                                      (L.cons '/' drop3) $ drop 2 accum
+                                 else normalise' 
+                                      (L.cons '/' drop3) $ drop 1 accum
   -- If it looks like a file, go back a directory
   | take2 == "/."              = if headIsFile
                                  then normalise' (L.cons '/' drop2) $ tail accum
@@ -177,8 +182,9 @@ normalise' input accum
   -- REMOVE QUERIES and FRAGMENTS
   | L.take 1 input == "#"      = accum
   | L.take 1 input == "?"      = accum
-  -- If it's a file following a file, ignore the preceeding segment
-  | isFile input && headIsFile = L.cons '/' input : tail accum
+  -- If it looks like a file following a file, ignore the preceeding segment
+  | isFile this && L.null rest && headIsFile 
+                               = L.cons '/' input : tail accum
   -- OTHERWISE CONTINUE
   | otherwise                  = normalise' rest
                                  $ L.cons '/' this : accum
@@ -232,6 +238,16 @@ isValidChar c
     || '0' <= c && c <= '9'
     || 'A' <= c && c <= 'Z'
     || c `elem` ("-_.~!*'();:@&=+$,/?#[]%" :: String)
+
+-- | Determines whether two normalised paths are the same. Returns True if and
+--   only if paths are equal or differing by a final '\/'.
+equalPaths :: L.ByteString    -- ^ First path to compare
+              -> L.ByteString -- ^ Second path to compare
+              -> Bool         -- ^ Returns true if paths are equal
+equalPaths p1 p2
+  = p1 == p2 
+    || L.append p1 "/" == p2
+    || L.append p2 "/" == p1
 
 --------------------------------------------------------------------------------
 -- FUNCTIONS to CHECK and SHOW URLS

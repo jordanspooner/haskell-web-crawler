@@ -147,12 +147,14 @@ url30 = Url "http:" "www.google.com" "/"
 url31 = Url "https:" "www.google.com" "/dir1/dir2/dir3/dir4/"
 url32 = Url "http:" "mail.google.com" "/"
 
-url33   = Url "http:" "example.com" "/d%e9cembre.html"
+url33   = Url "http:" "example.com" "/d\233cembre.html"
 url33'  = url8 -- urlBs8 relative to url33
 url33'' = url3 -- urlBs24 relative to url33
 url34   = Url "http:" "example.com" "/dir"
 url34'  = Url "http:" "example.com" "/dir/page.html"
                -- urlBs22 relative to url34
+url34'' = Url "http:" "example.com" "/page.html"
+               -- urlBs28 relative to url34
 
 --------------------------------------------------------------------------------
 -- FUNCTIONS to PARSE URL LISTS TESTS
@@ -222,6 +224,7 @@ parseUrlRelativeToTests
          , "url33'"  ~: parseUrlRelativeTo urlBs8 url33   ~?= url33'
          , "url33''" ~: parseUrlRelativeTo urlBs24 url33  ~?= url33''
          , "url34'"  ~: parseUrlRelativeTo urlBs22 url34  ~?= url34'
+         , "url34''" ~: parseUrlRelativeTo urlBs28 url34  ~?= url34''
          ]
 
 parseSchemeTests :: Test
