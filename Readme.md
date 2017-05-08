@@ -68,7 +68,7 @@ Given the input `www.haskell.org`, the program should return a JSON formatted st
 
 This program requires GHC and several dependencies, which can be installed using Cabal. I suggest downloading and installing the Haskell Platform (if you don't already have it), which is available on most package installers. E.g. using `apt-get`, you can install the Haskell Platform with the command `sudo apt-get install haskell-platform`.
 
-To install the dependencies, `cd` into the `simple-web-crawler` directory and run the command `sudo cabal install --only-dependencies`.
+To install the dependencies, `cd` into the `simple-web-crawler` directory and run the command `cabal install --only-dependencies`.
 
 ### Compilation
 
@@ -79,6 +79,15 @@ To compile the program so that you can run it in a multithreaded environment, yo
 * `--make Main.hs` will build the Haskell program `Main.hs`, automatically figuring out any dependencies.
 * `-threaded` uses the threaded runtime (allowing the program to run with multiple threads).
 * `-rtsopts` allows us to change some of the options for the runtime system.
+
+### Troubleshooting
+
+If you are getting compiler errors, try the following fix:
+
+* First recreate the cabal package. You can use `cabal init` to do this. Just choosing the defaults on every stage should be fine.
+* Then reinstall the dependencies using `cabal install --only-dependencies --reinstall`.
+
+If you're still getting errors, raise an issue and I'll have a look into it!
 
 ## Usage
 
