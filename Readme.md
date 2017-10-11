@@ -105,4 +105,4 @@ There may be other bugs present, as I have had to write code to parse URLs and H
 
 If you would like to reuse this code, make changes or simply investigate the code more deeply, you might find the following resources useful:
 - A test suite can be run with the command `runghc Tests`.
-- Haddock generated documentation for almost all included functions can be found [here](https://www.doc.ic.ac.uk/~js4416/100/simple-web-crawler/docs/) or in the `Documentation` directory.
+- Haddock generated documentation for almost all included functions can be found [here](https://jordanspooner.github.io/haskell-web-crawler/Documentation/) or in the `Documentation` directory.
