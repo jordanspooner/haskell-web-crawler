@@ -213,7 +213,7 @@ endAuthChars
 -- | Any characters not in the unreserved or reserved URL characters list are
 --   percent encoded.
 escape :: L.ByteString -- ^ A bytestring to encode
-       -> L.ByteString --  ^ Returns with any unknown characters percent encoded
+       -> L.ByteString -- ^ Returns with any unknown characters percent encoded
 escape
   = L.foldr (L.append .percentEncode) ""
 
