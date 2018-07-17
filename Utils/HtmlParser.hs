@@ -104,10 +104,10 @@ parseName
 -- | Given a bytestring beginning with an attribute value and /with no
 --   preceeding whitespace/, returns the attribute value and the remainder of
 --   the bytestring to be parsed.
-parseValue :: L.ByteString     -- ^ The bytestring to be parsed
+parseValue :: L.ByteString        -- ^ The bytestring to be parsed
               -> (L.ByteString
-              , L.ByteString)  -- ^ Returns the first attribute value and the
-                               --   remainder of the bytestring to be parsed
+                 , L.ByteString)  -- ^ Returns the first attribute value and the
+                                  --   remainder of the bytestring to be parsed
 parseValue bs
   | L.head bs == '\'' = L.break (== '\'') $ L.tail bs
   | L.head bs == '\"' = L.break (== '\"') $ L.tail bs
